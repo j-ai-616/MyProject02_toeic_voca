@@ -128,6 +128,16 @@ st.markdown("""
         box-shadow: 0 10px 24px rgba(0,0,0,0.05);
         margin-top: 12px;
     }
+    
+    .quiz-word-box {
+        background: white;
+        border: 1px solid #dfe8f5;
+        border-radius: 22px;
+        padding: 28px;
+        box-shadow: 0 10px 24px rgba(0,0,0,0.05);
+        margin-top: 12px;
+        margin-bottom: 16px;
+    }
 
     .quiz-word {
         font-size: 2rem;
@@ -546,9 +556,15 @@ elif menu == "Quiz":
             st.progress(idx / total_q)
             st.caption(f"진행률: {idx + 1} / {total_q}")
 
-            st.markdown('<div class="quiz-card">', unsafe_allow_html=True)
-            st.markdown(f'<div class="quiz-word">{q["word"]}</div>', unsafe_allow_html=True)
-            st.markdown('<div class="subtle-text">이 단어의 뜻으로 가장 알맞은 것을 고르세요.</div>', unsafe_allow_html=True)
+            st.markdown(
+                f"""
+                <div class="quiz-word-box">
+                    <div class="quiz-word">{q["word"]}</div>
+                    <div class="subtle-text">이 단어의 뜻으로 가장 알맞은 것을 고르세요.</div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
             selected = st.radio(
                 "정답 선택",
@@ -584,8 +600,6 @@ elif menu == "Quiz":
                         st.session_state.quiz_selected = None
                         st.rerun()
 
-            st.markdown('</div>', unsafe_allow_html=True)
-
         else:
             score = st.session_state.quiz_score
             st.markdown(f"""
@@ -599,7 +613,7 @@ elif menu == "Quiz":
             if st.button("다시 시작", use_container_width=True):
                 reset_quiz()
                 st.rerun()
-
+                
 # --------------------------------------------------
 # WRONG ANSWERS
 # --------------------------------------------------
