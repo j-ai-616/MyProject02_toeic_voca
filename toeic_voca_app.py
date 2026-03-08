@@ -646,4 +646,4 @@ elif menu == "Wrong Answers":
             st.success("오답노트를 비웠습니다.")
             st.rerun()
 
-st.markdown('<div class="footer-note">Made with Streamlit · TOEIC VOCA Study App</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer-note">Made by Jieun Son · TOEIC VOCA Study App</div>', unsafe_allow_html=True)
