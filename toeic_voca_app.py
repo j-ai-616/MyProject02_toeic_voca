@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import random
 from pathlib import Path
+from io import BytesIO
 
 # --------------------------------------------------
 # 기본 설정
@@ -160,14 +161,6 @@ st.markdown("""
         margin-bottom: 18px;
     }
 
-    .wrong-card {
-        background: #fffaf5;
-        border: 1px solid #fde7c7;
-        border-radius: 18px;
-        padding: 18px;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.04);
-    }
-
     .footer-note {
         text-align: center;
         color: #6b7280;
@@ -302,6 +295,16 @@ def render_header(title, subtitle):
         unsafe_allow_html=True
     )
 
+def convert_wrong_answers_to_csv(wrong_df):
+    return wrong_df.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
+
+def convert_wrong_answers_to_xlsx(wrong_df):
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        wrong_df.to_excel(writer, index=False, sheet_name="Wrong Answers")
+    output.seek(0)
+    return output.getvalue()
+
 # --------------------------------------------------
 # 사이드바
 # --------------------------------------------------
@@ -352,7 +355,6 @@ if menu == "Home":
         </div>
         """, unsafe_allow_html=True)
 
-
     left, right = st.columns([1.2, 1])
 
     with left:
@@ -380,8 +382,8 @@ if menu == "Home":
 
         st.markdown("""
         <div class="highlight-box">
-        추천 학습 순서: <b>Day Study → Quiz → Wrong Answers → Random Word</b><br>
-        먼저 외우고, 바로 확인하고, 틀린 것만 다시 보는 흐름이 가장 효율적입니다..
+        추천 학습 순서: <b>Day Study → Quiz → Wrong Answers</b><br>
+        먼저 외우고, 바로 확인하고, 틀린 것만 다시 보는 흐름이 가장 효율적입니다.
         </div>
         """, unsafe_allow_html=True)
 
@@ -427,7 +429,6 @@ elif menu == "Day Study":
                 st.session_state.study_index = (st.session_state.study_index + 1) % len(day_df)
 
         current = day_df.iloc[st.session_state.study_index]
-
         meaning_text = f"뜻: {current['뜻']}" if st.session_state.show_meaning else "뜻을 먼저 떠올려보세요."
 
         st.markdown(
@@ -613,7 +614,7 @@ elif menu == "Quiz":
             if st.button("다시 시작", use_container_width=True):
                 reset_quiz()
                 st.rerun()
-                
+
 # --------------------------------------------------
 # WRONG ANSWERS
 # --------------------------------------------------
@@ -633,13 +634,34 @@ elif menu == "Wrong Answers":
         </div>
         """, unsafe_allow_html=True)
 
-        st.markdown('<div class="wrong-card">', unsafe_allow_html=True)
         st.dataframe(
             wrong_df[["Day", "단어", "뜻"]],
             use_container_width=True,
             hide_index=True
         )
-        st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown("### 📥 오답노트 다운로드")
+        d1, d2 = st.columns(2)
+
+        with d1:
+            csv_data = convert_wrong_answers_to_csv(wrong_df[["Day", "단어", "뜻"]])
+            st.download_button(
+                label="CSV 다운로드",
+                data=csv_data,
+                file_name="wrong_answers.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+
+        with d2:
+            xlsx_data = convert_wrong_answers_to_xlsx(wrong_df[["Day", "단어", "뜻"]])
+            st.download_button(
+                label="Excel(.xlsx) 다운로드",
+                data=xlsx_data,
+                file_name="wrong_answers.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True
+            )
 
         if st.button("🗑 오답노트 비우기", use_container_width=True):
             st.session_state.wrong_answers = []
